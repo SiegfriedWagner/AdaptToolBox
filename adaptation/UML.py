@@ -346,3 +346,45 @@ class WeibullUML(UML):
         swpts = sorted(swpts)
 
         return swpts
+
+class GaussianUML(UML):
+    '''WARNING: Currently doesn't  pass unit tests!!!'''
+    def _prob_function(self, x, alpha, beta, gamma, lamb):
+        return curves.gaussian(x, alpha, beta, gamma, lamb)
+    
+    def _calc_sweetpoints(self, phi):
+        def psycfunc(x, phi):
+            mu = phi[-4]
+            sigma = phi[-3]
+            gamma = phi[-2]
+            lamb = phi[-1]
+            return gamma + ((1 - gamma - lamb) / 2) * (1 + scispec.erf((x - mu) / np.sqrt(2 * sigma ** 2)))
+
+        def psycfunc_derivative(x, phi):
+            mu = phi[-4]
+            sigma = phi[-3]
+            gamma = phi[-2]
+            lamb = phi[-1]
+            return -(1 - gamma - lamb) / (np.sqrt(2 * np.pi) * sigma) * np.exp(
+                -(x - mu) ** 2 / np.sqrt(2 * sigma ** 2))
+
+        def psycfunc_derivative_sigma(x, phi):
+            mu = phi[-4]
+            sigma = phi[-3]
+            gamma = phi[-2]
+            lamb  = phi[-1]
+            return -(1 - gamma - lamb) * (x - mu) / (np.sqrt(2 * np.pi) * sigma ** 2) * np.exp(
+                -(x - mu) ** 2 / (2 * sigma ** 2))
+
+        def sigma2_mu(x, phi, psycfunc, psycfunc_derivative):
+            return psycfunc(x, phi) * (1 - psycfunc(x, phi)) / (psycfunc_derivative(x, phi)) ** 2
+
+        def sigma2_sigma(x, phi, psycfunc, psycfun_derivative_sigma):
+            return psycfunc(x, phi) * (1 - psycfunc(x, phi)) / (psycfun_derivative_sigma(x, phi)) ** 2
+
+        swpts = [0, 0, 0]
+        swpts[0] = sciopt.fmin(sigma2_sigma, x0=phi[0] - 10, args=(phi, psycfunc, psycfunc_derivative_sigma), disp=0)
+        swpts[1] = sciopt.fmin(sigma2_mu, x0=phi[0], args=(phi, psycfunc, psycfunc_derivative), disp=0)
+        swpts[2] = sciopt.fmin(sigma2_sigma, x0=phi[0] + 10, args=(phi, psycfunc, psycfunc_derivative_sigma), disp=0)
+
+        return swpts

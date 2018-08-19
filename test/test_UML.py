@@ -1,4 +1,4 @@
-from adaptation.UML import LogitUML, UMLParameter, UML, WeibullUML
+from adaptation.UML import LogitUML, UMLParameter, UML, WeibullUML, GaussianUML
 import unittest
 from numpy.testing import assert_allclose
 from support import loadmat, debug_on
@@ -272,6 +272,87 @@ class WeibullUMLTestCase(unittest.TestCase):
         assert_allclose(self.tested.phi, self.uml_source_data['phi'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.p, self.uml_source_data['p'], rtol=1, atol=0)
 
+
+class GaussianUMLTestCase(unittest.TestCase):
+
+    def setUp(self):
+        alpha = UMLParameter(min_value=-20,
+                             max_value=20,
+                             n=61,
+                             scale='lin',
+                             dist='flat',
+                             mu=0,
+                             std=20)
+        beta = UMLParameter(min_value=1,
+                            max_value=20,
+                            n=41,
+                            scale='log',
+                            dist='norm',
+                            mu=0.5,
+                            std=2)
+        gamma = UMLParameter(value = 0.5)
+        lamb = UMLParameter(scale="lin",
+                            dist="flat",
+                            min_value=0,
+                            max_value=0.1,
+                            mu=0,
+                            std=0.1,
+                            n=5)
+        self.tested = GaussianUML(safemode=False,
+                                  max_stimuli=30,
+                                  min_stimuli=-30,
+                                  value=25,
+                                  method='mean',
+                                  alpha=alpha,
+                                  beta=beta,
+                                  gamma=gamma,
+                                  lamb=lamb)
+        self.uml_source_data = loadmat('./test/GaussianUMLData.mat')
+        self.uml_source_data = self.uml_source_data['ans']
+
+    def tearDown(self):
+        del(self.tested)
+        del(self.uml_source_data)
+
+    def test_constructor(self):
+        par = self.uml_source_data['par']
+        self.assertAlmostEqual(self.tested.min_stimuli, par['x_lim'][0], places=4)
+        self.assertEqual(self.tested.max_stimuli, par['x_lim'][1])
+        self.assertEqual(self.tested.value, par['x0'])
+        self.assertEqual(self.tested.method, par['method'])
+        alpha = self.tested.alpha
+        beta = self.tested.beta
+        gamma = self.tested.gamma
+        lamb = self.tested.lamb
+        self.assertAlmostEqual(alpha.min_value, par['alpha']['limits'][0], places=4)
+        self.assertEqual(alpha.max_value, par['alpha']['limits'][1])
+        self.assertEqual(alpha.scale, par['alpha']['scale'])
+        self.assertEqual(alpha.dist, par['alpha']['dist'])
+        self.assertEqual(alpha.mu, par['alpha']['mu'])
+        self.assertEqual(alpha.std, par['alpha']['std'])
+
+        self.assertAlmostEqual(beta.min_value, par['beta']['limits'][0], places=4)
+        self.assertEqual(beta.max_value, par['beta']['limits'][1])
+        self.assertEqual(beta.scale, par['beta']['scale'])
+        self.assertEqual(beta.dist, par['beta']['dist'])
+        self.assertEqual(beta.mu, par['beta']['mu'])
+        self.assertEqual(beta.std, par['beta']['std'])
+
+        self.assertEqual(gamma.value, par['gamma'])
+
+        self.assertAlmostEqual(lamb.min_value, par['lambda']['limits'][0], places=4)
+        self.assertEqual(lamb.max_value, par['lambda']['limits'][1])
+        self.assertEqual(lamb.scale, par['lambda']['scale'])
+        self.assertEqual(lamb.dist, par['lambda']['dist'])
+        self.assertEqual(lamb.mu, par['lambda']['mu'])
+        self.assertEqual(lamb.std, par['lambda']['std'])
+        
+    def test_final_run(self):
+        responses = self.uml_source_data['r']
+        for response in responses:
+            self.tested.update(response, incorrect_set=(0,))
+
+        assert_allclose(self.tested.p, self.uml_source_data['p'], rtol=0, atol=1e-7)
 
 if __name__ == '__main__':
     unittest.main()
