@@ -122,7 +122,7 @@ class UML(ABCAdaptation, ABC):
         elif self.xnext == self.max_stimuli:
             init_step = len(self.swpts_idx) - 1 
         else:
-            init_step = math.ceil((len(self.swpts_idx) - 1) / 2)
+            init_step = math.ceil(len(self.swpts_idx) / 2) - 1
         self.swpt_picker = LinearStarcase(safemode=False,
                                           reset_after_change=True,
                                           ndown=2,
@@ -142,9 +142,8 @@ class UML(ABCAdaptation, ABC):
         self.beta.setParSpace()
         self.lamb.setParSpace()
         # code.interact(local=locals())
-        self.alpha.meshgrid, self.beta.meshgrid, self.lamb.meshgrid = np.meshgrid(self.alpha.space,
-                                                                            self.beta.space,
-                                                                            self.lamb.space)
+        self.alpha.meshgrid, self.beta.meshgrid, self.lamb.meshgrid = \
+            np.meshgrid(self.alpha.space, self.beta.space, self.lamb.space)
         # set the prior value and the space for hypo phi
         A = self.alpha.setPrior()
         B = self.beta.setPrior()
@@ -206,7 +205,8 @@ class UML(ABCAdaptation, ABC):
             # lambda
             lambda_est_tmp = np.sum(pdf_tmp * self.lamb.meshgrid)
             # combine together
-            self.phi = np.append(self.phi, [[alpha_est_tmp, beta_est_tmp, self.gamma.value, lambda_est_tmp]], axis=0)
+            self.phi = np.append(self.phi, [[alpha_est_tmp, beta_est_tmp,
+                                             self.gamma.value, lambda_est_tmp]], axis=0)
         else:
             raise Exception('Wrong method name')
         # find the next signal strength at the appropriate sweet point
@@ -276,10 +276,7 @@ class LogitUML(UML, InheritableDocstrings):
                 return value
 
         # calculate the sweet points for a logit psychometric function, for parameter alpha, beta, and lambda
-        alpha = phi[-4]
-        beta = phi[-3]
-        gamma = phi[-2]
-        lamb = phi[-1]
+        alpha, beta, gamma, lamb = phi
         swpts = np.zeros(3)
         switch = -1
         swpts[0] = sciopt.fmin(betavar_est, x0=alpha - 10.0, args=(alpha, beta, gamma, lamb, switch), disp=0)[0]
@@ -332,11 +329,7 @@ class WeibullUML(UML):
                 return  -term1 * term2 * term3 / term4 + 1e10
             else:
                 return -term1 * term2 * term3 / term4
-
-        k = phi[-4]
-        beta = phi[-3]
-        gamma = phi[-2]
-        lamb = phi[-1]
+        k, beta, gamma, lamb = phi
         swpts = [0, 0, 0]
         switch = -1
         swpts[0] = sciopt.fmin(betavar_est, k / 2, args=(k, beta, gamma, lamb, switch), disp=0)[0]
@@ -352,39 +345,23 @@ class GaussianUML(UML):
     def _prob_function(self, x, alpha, beta, gamma, lamb):
         return curves.gaussian(x, alpha, beta, gamma, lamb)
     
-    def _calc_sweetpoints(self, phi):
-        def psycfunc(x, phi):
-            mu = phi[-4]
-            sigma = phi[-3]
-            gamma = phi[-2]
-            lamb = phi[-1]
-            return gamma + ((1 - gamma - lamb) / 2) * (1 + scispec.erf((x - mu) / np.sqrt(2 * sigma ** 2)))
+    def _psycfunc_derivative_mu(self, x):
+        mu, sigma, gamma, lamb  = self.phi[-1]
+        return -(1 - gamma - lamb) / (np.sqrt(2 * np.pi) * sigma) * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2))
 
-        def psycfunc_derivative(x, phi):
-            mu = phi[-4]
-            sigma = phi[-3]
-            gamma = phi[-2]
-            lamb = phi[-1]
-            return -(1 - gamma - lamb) / (np.sqrt(2 * np.pi) * sigma) * np.exp(
-                -(x - mu) ** 2 / np.sqrt(2 * sigma ** 2))
+    def _psycfunc_derivative_sigma(self, x):
+        mu, sigma, gamma, lamb  = self.phi[-1]
+        return -(1 - gamma - lamb) * (x - mu) / (np.sqrt(2 * np.pi) * sigma ** 2) * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2))
 
-        def psycfunc_derivative_sigma(x, phi):
-            mu = phi[-4]
-            sigma = phi[-3]
-            gamma = phi[-2]
-            lamb  = phi[-1]
-            return -(1 - gamma - lamb) * (x - mu) / (np.sqrt(2 * np.pi) * sigma ** 2) * np.exp(
-                -(x - mu) ** 2 / (2 * sigma ** 2))
+    def _sigma2(self, x, psycfunc_derivative):
+        phi = self.phi[-1]
+        psycfunc = self._prob_function
+        return psycfunc(x, *phi) * (1 - psycfunc(x, *phi)) / (psycfunc_derivative(x)) ** 2
 
-        def sigma2_mu(x, phi, psycfunc, psycfunc_derivative):
-            return psycfunc(x, phi) * (1 - psycfunc(x, phi)) / (psycfunc_derivative(x, phi)) ** 2
-
-        def sigma2_sigma(x, phi, psycfunc, psycfun_derivative_sigma):
-            return psycfunc(x, phi) * (1 - psycfunc(x, phi)) / (psycfun_derivative_sigma(x, phi)) ** 2
-
+    def _calc_sweetpoints(self, phi):       
         swpts = [0, 0, 0]
-        swpts[0] = sciopt.fmin(sigma2_sigma, x0=phi[0] - 10, args=(phi, psycfunc, psycfunc_derivative_sigma), disp=0)
-        swpts[1] = sciopt.fmin(sigma2_mu, x0=phi[0], args=(phi, psycfunc, psycfunc_derivative), disp=0)
-        swpts[2] = sciopt.fmin(sigma2_sigma, x0=phi[0] + 10, args=(phi, psycfunc, psycfunc_derivative_sigma), disp=0)
+        swpts[0] = sciopt.fmin(self._sigma2, args=(self._psycfunc_derivative_sigma,), x0=phi[0] - 10, disp=0)
+        swpts[1] = sciopt.fmin(self._sigma2, args=(self._psycfunc_derivative_mu,), x0=phi[0], disp=0)
+        swpts[2] = sciopt.fmin(self._sigma2, args=(self._psycfunc_derivative_sigma,), x0=phi[0] + 10, disp=0)
 
         return swpts
