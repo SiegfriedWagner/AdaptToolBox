@@ -1,10 +1,10 @@
 import unittest
-from adaptation.Staircase import Staircase, LinearStarcase
+from adaptation.Staircase import _Staircase, LinearStaircase
 
 
 class StaircaseTestCase(unittest.TestCase):
     
-    class GenericStaircase(Staircase):
+    class GenericStaircase(_Staircase):
 
         def up(self):
             pass
@@ -46,7 +46,7 @@ class StaircaseTestCase(unittest.TestCase):
 class LinearStaircaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.tested = LinearStarcase(safemode=False,
+        self.tested = LinearStaircase(safemode=False,
                                      reset_after_change=False,
                                      ndown=3,
                                      nup=2,
@@ -79,7 +79,7 @@ class LinearStaircaseTestCase(unittest.TestCase):
         self.assertSequenceEqual(targets, outputs)
 
     def test_sequence_2(self):
-        self._tested = LinearStarcase(safemode=False,
+        self._tested = LinearStaircase(safemode=False,
                                       reset_after_change=True,
                                       ndown=2,
                                       nup=1,

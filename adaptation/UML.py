@@ -1,5 +1,15 @@
+'''
+Module contating all algorithms based on Updated Maximum Likelihood (UML).
+
+Provides:
+UMLParameter -- object variable used by all UML algorithms
+UML -- abstract base class for all UML algorithms (inherits ABCAdaptation)
+LogitUML -- class supporting logit function parameter calculation
+GaussianUML -- class supporting gaussian function parameter calculation
+WeibullUML -- class supporting weibull function parameter calculation
+'''
 from support import ABCAdaptation, InheritableDocstrings
-from adaptation.Staircase import LinearStarcase
+from adaptation.Staircase import LinearStaircase
 import curves
 import numpy as np
 import scipy.optimize as sciopt
@@ -7,8 +17,6 @@ import scipy.stats as scistat
 import scipy.special as scispec
 import math
 from abc import ABC, abstractmethod
-import code
-import inspect
 
 class UMLParameter(object):
     '''
@@ -88,17 +96,17 @@ class UMLParameter(object):
         elif self.dist == 'flat':
             return np.ones_like(self.meshgrid)
 
-class UML(ABCAdaptation, ABC):
+class _UML(ABCAdaptation, ABC):
     '''
-    Abstrac Base Class for all UML Classes
+    Abstrac Base Class for all UML classes
     '''
     default = ""
     required_parameters = ("max_stimuli", "min_stimuli", "value",
                            "method", "alpha", "beta", "gamma", "lamb")
 
     def __init__(self, config=default, **kwargs):
-        self.required_parameters += UML.required_parameters
-        super(UML, self).__init__(config, **kwargs)
+        self.required_parameters += _UML.required_parameters
+        super(_UML, self).__init__(config, **kwargs)
         self._setP0()
         self.x = []
         self.trial_n = 0
@@ -123,7 +131,7 @@ class UML(ABCAdaptation, ABC):
             init_step = len(self.swpts_idx) - 1 
         else:
             init_step = math.ceil(len(self.swpts_idx) / 2) - 1
-        self.swpt_picker = LinearStarcase(safemode=False,
+        self.swpt_picker = LinearStaircase(safemode=False,
                                           reset_after_change=True,
                                           ndown=2,
                                           nup=1,
@@ -136,12 +144,11 @@ class UML(ABCAdaptation, ABC):
 
 
     def _setP0(self):
-
+        '''Calculates initial propability space'''
         # set the space for phi
         self.alpha.setParSpace()
         self.beta.setParSpace()
         self.lamb.setParSpace()
-        # code.interact(local=locals())
         self.alpha.meshgrid, self.beta.meshgrid, self.lamb.meshgrid = \
             np.meshgrid(self.alpha.space, self.beta.space, self.lamb.space)
         # set the prior value and the space for hypo phi
@@ -166,7 +173,7 @@ class UML(ABCAdaptation, ABC):
         By default only supported values are '1' for correct
         answer and '-1' for incorrect answer.
 
-        Optional args:
+        Optional args (decorator):
         correct_set: set -- set of values converted to correct response
         incorrect_set: set -- set of values converted to incorrect response
 
@@ -222,13 +229,14 @@ class UML(ABCAdaptation, ABC):
     @abstractmethod
     def _calc_sweetpoints(self, phi):
         raise NotImplementedError
-
+    
+    @staticmethod
     @abstractmethod
-    def _prob_function(self, x, alpha, beta, gamma, lamb):
+    def _prob_function(x, alpha, beta, gamma, lamb):
         raise NotImplementedError
 
 
-class LogitUML(UML, InheritableDocstrings):
+class LogitUML(_UML, InheritableDocstrings):
     '''
     UML using logistic function.
 
@@ -244,7 +252,9 @@ class LogitUML(UML, InheritableDocstrings):
     gamma: UMLParameter -- gamma parameter
     lamb: UMLParameter -- lambda parameter
     '''
-    def _prob_function(self, x, alpha, beta, gamma, lamb):
+
+    @staticmethod
+    def _prob_function(x, alpha, beta, gamma, lamb):
         return curves.logistic(x, alpha, beta, gamma, lamb)
         
     def _calc_sweetpoints(self, phi):
@@ -287,7 +297,7 @@ class LogitUML(UML, InheritableDocstrings):
 
         return swpts
 
-class WeibullUML(UML):
+class WeibullUML(_UML):
     '''
     UML using weibull function.
 
@@ -303,10 +313,11 @@ class WeibullUML(UML):
     gamma: UMLParameter -- gamma parameter
     lamb: UMLParameter -- lambda parameter
     '''
-
-    def _prob_function(self, x, alpha, beta, gamma, lamb):
+    @staticmethod
+    def _prob_function(x, alpha, beta, gamma, lamb):
         return curves.weibull(x, alpha, beta, gamma, lamb)
     
+
     def _calc_sweetpoints(self, phi):
         def kvar_est(x, k, beta, gamma, lamb):
             term1 = k ** 2 * (x / k) ** (-2 * beta)
@@ -340,9 +351,24 @@ class WeibullUML(UML):
 
         return swpts
 
-class GaussianUML(UML):
-    '''WARNING: Currently doesn't  pass unit tests!!!'''
-    def _prob_function(self, x, alpha, beta, gamma, lamb):
+class GaussianUML(_UML):
+    '''
+    UML using gaussian function.
+
+    Args:
+    safemode: bool -- currently unused, set False
+    max_stimuli: float -- maximum stimulus generated by algorithm
+    min_stimuli: float -- minimum stimulus generated by algorithm
+    value: float -- initial value of stimulus
+    method: str -- method used to pick sweetpoints form porability space
+    currentyly supported 'mode' and 'mean'
+    alpha: UMLParameter -- alpha parameter
+    beta: UMLParameter -- beta parameter
+    gamma: UMLParameter -- gamma parameter
+    lamb: UMLParameter -- lambda parameter
+    '''
+    @staticmethod
+    def _prob_function(x, alpha, beta, gamma, lamb):
         return curves.gaussian(x, alpha, beta, gamma, lamb)
     
     def _psycfunc_derivative_mu(self, x):

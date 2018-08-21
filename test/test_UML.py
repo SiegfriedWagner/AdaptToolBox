@@ -1,4 +1,4 @@
-from adaptation.UML import LogitUML, UMLParameter, UML, WeibullUML, GaussianUML
+from adaptation.UML import LogitUML, UMLParameter, _UML, WeibullUML, GaussianUML
 import unittest, code
 from numpy.testing import assert_allclose
 from support import loadmat, debug_on
@@ -57,7 +57,7 @@ class UMLParameterTest(unittest.TestCase):
         
 
 class UMLTestCase(unittest.TestCase):
-    class GenericUML(UML):
+    class GenericUML(_UML):
         def _calc_sweetpoints(self, phi):
             return [0, 0, 0]
 
@@ -182,6 +182,7 @@ class LogitUMLTestCase(unittest.TestCase):
         responses = self.uml_source_data['r']
         for response in responses:
             self.tested.update(response, incorrect_set=(0,))
+        assert_allclose(self.tested.x, self.uml_source_data['x'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.phi, self.uml_source_data['phi'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.swpts, self.uml_source_data['swpts'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.p, self.uml_source_data['p'], rtol=0, atol=1e-7)
@@ -269,6 +270,7 @@ class WeibullUMLTestCase(unittest.TestCase):
         responses = self.uml_source_data['r']
         for response in responses:
             self.tested.update(response, incorrect_set=(0,))
+        assert_allclose(self.tested.x, self.uml_source_data['x'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.phi, self.uml_source_data['phi'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.p, self.uml_source_data['p'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.swpts, self.uml_source_data['swpts'], rtol=0.02, atol=1e-7)
@@ -385,6 +387,7 @@ class GaussianUMLTestCase(unittest.TestCase):
         responses = self.uml_source_data['r']
         for response in responses:
             self.tested.update(response, incorrect_set=(0,))
+        assert_allclose(self.tested.x, self.uml_source_data['x'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.phi, self.uml_source_data['phi'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.p, self.uml_source_data['p'], rtol=0, atol=1e-7)
         assert_allclose(self.tested.swpts, self.uml_source_data['swpts'], rtol=0.02, atol=1e-7)
