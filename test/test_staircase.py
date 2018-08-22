@@ -1,5 +1,5 @@
 import unittest
-from adaptation.Staircase import _Staircase, LinearStaircase
+from AdaptToolBox.adaptation.Staircase import _Staircase, LinearStaircase
 
 
 class StaircaseTestCase(unittest.TestCase):

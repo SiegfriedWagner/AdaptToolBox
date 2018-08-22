@@ -8,7 +8,7 @@ responses.
 ListStaircase -- iterates over provided touple based on participant
 responses.
 '''
-from support import ABCAdaptation
+from AdaptToolBox.support import ABCAdaptation
 from abc import ABC, abstractmethod
 class _Staircase(ABCAdaptation, ABC):
     '''

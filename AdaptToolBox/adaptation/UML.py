@@ -8,9 +8,9 @@ LogitUML -- class supporting logit function parameter calculation
 GaussianUML -- class supporting gaussian function parameter calculation
 WeibullUML -- class supporting weibull function parameter calculation
 '''
-from support import ABCAdaptation, InheritableDocstrings
-from adaptation.Staircase import LinearStaircase
-import curves
+from AdaptToolBox.support import ABCAdaptation, InheritableDocstrings
+from AdaptToolBox.adaptation.Staircase import LinearStaircase
+import AdaptToolBox.curves as curves
 import numpy as np
 import scipy.optimize as sciopt
 import scipy.stats as scistat

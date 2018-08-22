@@ -1,7 +1,7 @@
-from adaptation.UML import LogitUML, UMLParameter, _UML, WeibullUML, GaussianUML
+from AdaptToolBox.adaptation.UML import LogitUML, UMLParameter, _UML, WeibullUML, GaussianUML
 import unittest, code
 from numpy.testing import assert_allclose
-from support import loadmat, debug_on
+from AdaptToolBox.support import loadmat, debug_on
 
 class UMLParameterTest(unittest.TestCase):
 

@@ -1,5 +1,5 @@
 import unittest
-import curves
+import AdaptToolBox.curves as curves
 from numpy.testing import assert_allclose
 
 
