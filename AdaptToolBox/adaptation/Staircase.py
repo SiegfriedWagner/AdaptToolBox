@@ -5,7 +5,7 @@ Provides:
 _Staircase -- abstract base class for all staircase class
 LinearStaircase -- changes stimulus linearly based on participant
 responses.
-ListStaircase -- iterates over provided touple based on participant
+ListStaircase -- iterates over provided tuple based on participant
 responses.
 '''
 from AdaptToolBox.support import ABCAdaptation
@@ -23,11 +23,14 @@ class _Staircase(ABCAdaptation, ABC):
     stimulus change
     '''
     default=""
-    required_parameters=('ndown', 'nup', 'n', 'reset_after_change')
+    required_parameters = ABCAdaptation.required_parameters.copy()
+    required_parameters.update({'ndown': int,
+                                'nup': int,
+                                'n': int,
+                                'reset_after_change': bool})
 
-    def __init__(self, config=default, **kwargs):
-        self.required_parameters += _Staircase.required_parameters
-        super(_Staircase, self).__init__(config, **kwargs)
+    def __init__(self, **kwargs):
+        super(_Staircase, self).__init__(**kwargs)
 
     @ABCAdaptation.answer_boolcheck()  # That brackets are important
     def update(self, response):
@@ -78,13 +81,16 @@ class LinearStaircase(_Staircase):
     reset_after_change: bool -- decides if reset n to 0 after every 
     stimulus change
     '''
-    default = ""
-    required_parameters = ("diff_up", "diff_down", "value",
-                           "max_value", "min_value")
 
-    def __init__(self, config=default, **kwargs):
-        self.required_parameters += LinearStaircase.required_parameters
-        super(LinearStaircase, self).__init__(config, **kwargs)
+    required_parameters = _Staircase.required_parameters.copy()
+    required_parameters.update({"diff_up": float,
+                                "diff_down": float,
+                                "value": float,
+                                "max_value": float,
+                                "min_value": float})
+
+    def __init__(self, **kwargs):
+        super(LinearStaircase, self).__init__(**kwargs)
 
     def up(self):
         self.value = min(self.value + self.diff_up, self.max_value)
@@ -99,7 +105,7 @@ class LinearStaircase(_Staircase):
     
 class ListStaircase(_Staircase):
     '''
-    Staircase that based on response returns items from touple, where
+    Staircase that based on response returns items from tuple, where
     correct responses move iterator up and incorrent move it down.
 
     Args:
@@ -110,28 +116,29 @@ class ListStaircase(_Staircase):
     required to change stimuli up 
     n: int -- initial number of consecutive correct responses (n>0)
     or incorrect responses (n<0)
-    stimuli_touple: touple -- touple contating all possible stimuli
+    stimuli_tuple: tuple -- tuple contating all possible stimuli
     initial_position: int -- starting position in toupe
     reset_after_change: bool -- decides if reset n to 0 after every 
     stimulus change
     '''
-    default = ""
-    required_parameters = ("stimuli_touple", "initial_position")
 
-    def __init__(self, config=default, **kwargs):
-        self.required_parameters += ListStaircase.required_parameters
-        super(LinearStaircase, self).__init__(config, **kwargs)
+    required_parameters = _Staircase.required_parameters.copy()
+    required_parameters.update({"stimuli_tuple": tuple,
+                                "initial_position": int})
+
+    def __init__(self, **kwargs):
+        super(ListStaircase, self).__init__(**kwargs)
         self.position = self.initial_position
         
     def up(self):
-        self.position = max(self.position + 1,
-                            len(self.stimuli_touple))
-        return self.stimuli_touple[self.position]
+        self.position = min(self.position + 1,
+                            len(self.stimuli_tuple)-1)
+        return self.stimuli_tuple[self.position]
     
     def down(self):
-        self.position = min(self.position - 1, 0)
-        return self.stimuli_touple[self.position]
+        self.position = max(self.position - 1, 0)
+        return self.stimuli_tuple[self.position]
 
     def no_change(self):
-        return self.stimuli_touple[self.position]
+        return self.stimuli_tuple[self.position]
   

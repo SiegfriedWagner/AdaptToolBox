@@ -75,19 +75,19 @@ class ABCAdaptation(ABC):
     update (abstractmethod)
     answer_boolcheck (staticmethod, decorator)
     '''
-    required_parameters=("safemode",)
+    required_parameters = {}
 
     @abstractmethod
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, **kwargs):
         '''Takes care of intialization and declaration of arguments'''
-        self.required_parameters += ABCAdaptation.required_parameters
+        self.validate_input(self.__class__.required_parameters, kwargs)
         for key, value in kwargs.items():
-            if key in self.required_parameters:
+            if key in self.__class__.required_parameters:
                 setattr(self, key, value)
             else:
                 raise AttributeError(str(key) + " is not used by "
                                      + str(self.__class__.__name__))
-        missing = set(self.required_parameters).difference(dir(self))
+        missing = set(self.__class__.required_parameters).difference(dir(self))
         if len(missing) != 0:
             raise AttributeError("Missing parameters " + str(missing))
         
@@ -129,7 +129,25 @@ class ABCAdaptation(ABC):
         '''
         raise NotImplementedError
 
-
+    @staticmethod
+    def validate_input(required, inputs, verbose=False):
+        import code
+#        code.interact(local=locals())
+        for key, value in inputs.items():
+            if key in required.keys():
+                valid = required[key]
+                if type(valid) is type and valid is type(value):
+                    pass
+                elif type(valid) is list and value in valid:
+                    pass
+                elif type(valid) is dict and type(value) is dict:
+                    ABCAdaptation.validate_input(valid, value, verbose)
+                else:
+                    raise ValueError(str(key) + " is not " + str(valid))
+                if verbose: print("{} have valid value {}".format(key, value))
+            else:
+                raise ValueError("Unknown input: " + str(key))
+            
 class InheritableDocstrings(ABC):
     def __prepare__(name, bases):
         classdict = dict()

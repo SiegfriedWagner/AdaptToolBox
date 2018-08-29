@@ -9,7 +9,7 @@ GaussianUML -- class supporting gaussian function parameter calculation
 WeibullUML -- class supporting weibull function parameter calculation
 '''
 from AdaptToolBox.support import ABCAdaptation, InheritableDocstrings
-from AdaptToolBox.adaptation.Staircase import LinearStaircase
+from AdaptToolBox.adaptation.Staircase import ListStaircase
 import AdaptToolBox.curves as curves
 import numpy as np
 import scipy.optimize as sciopt
@@ -100,13 +100,19 @@ class _UML(ABCAdaptation, ABC):
     '''
     Abstrac Base Class for all UML classes
     '''
-    default = ""
-    required_parameters = ("max_stimuli", "min_stimuli", "value",
-                           "method", "alpha", "beta", "gamma", "lamb")
+    required_parameters = ABCAdaptation.required_parameters.copy()
+    required_parameters.update({
+        "max_stimuli": float,
+        "min_stimuli": float,
+        "value": float,
+        "method": ['mean', 'mode'],
+        "alpha": UMLParameter,
+        "beta": UMLParameter,
+        "gamma": UMLParameter,
+        "lamb": UMLParameter})
 
-    def __init__(self, config=default, **kwargs):
-        self.required_parameters += _UML.required_parameters
-        super(_UML, self).__init__(config, **kwargs)
+    def __init__(self, **kwargs):
+        super(_UML, self).__init__(**kwargs)
         self._setP0()
         self.x = []
         self.trial_n = 0
@@ -131,16 +137,21 @@ class _UML(ABCAdaptation, ABC):
             init_step = len(self.swpts_idx) - 1 
         else:
             init_step = math.ceil(len(self.swpts_idx) / 2) - 1
-        self.swpt_picker = LinearStaircase(safemode=False,
-                                          reset_after_change=True,
-                                          ndown=2,
-                                          nup=1,
-                                          n=0,
-                                          diff_up=1,
-                                          diff_down=1,
-                                          value=init_step,
-                                          max_value=len(self.swpts_idx)-1,
-                                          min_value=0)
+        # self.swpt_picker = LinearStaircase(reset_after_change=True,
+        #                                    ndown=2,
+        #                                    nup=1,
+        #                                    n=0,
+        #                                    diff_up=1.0,
+        #                                    diff_down=1.0,
+        #                                    value=float(init_step),
+        #                                    max_value=len(self.swpts_idx)-1.0,
+        #                                    min_value=0.0)
+        self.swpt_picker = ListStaircase(reset_after_change=True,
+                                         ndown=2,
+                                         nup=1,
+                                         n=0,
+                                         stimuli_tuple=tuple(self.swpts_idx),
+                                         initial_position=init_step)
 
 
     def _setP0(self):
