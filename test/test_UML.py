@@ -2,7 +2,6 @@ from AdaptToolBox.adaptation.UML import LogitUML, UMLParameter, _UML, WeibullUML
 import unittest, code
 from numpy.testing import assert_allclose
 from AdaptToolBox.support import loadmat, debug_on
-
 class UMLParameterTest(unittest.TestCase):
 
     def test_constructor_error(self):
