@@ -8,6 +8,7 @@ import sys
 import pdb
 import functools
 import traceback
+import pickle
 
 def debug_on(*exceptions):
     if not exceptions:
@@ -63,8 +64,6 @@ def loadmat(filename):
     return _check_keys(data)
 
 
-
-
 class ABCAdaptation(ABC):
     '''
     Abstrac Base Class for every adaptation algorithm in this package.
@@ -90,8 +89,18 @@ class ABCAdaptation(ABC):
         missing = set(self.__class__.required_parameters).difference(dir(self))
         if len(missing) != 0:
             raise AttributeError("Missing parameters " + str(missing))
-        
-    @staticmethod   
+
+    def __init_subclass__(cls):
+        '''
+        Takes care of properly updating "required_parameters"
+        variable in subclasses
+        '''
+        if hasattr(cls, "required_parameters"):
+            for mr in cls.mro():
+                if issubclass(cls, mr) and hasattr(mr, "required_parameters"):
+                    cls.required_parameters.update(mr.required_parameters)
+                
+    @staticmethod
     def answer_boolcheck(correct_set: set = set((1.0, "correct", "valid")),
                          incorrect_set: set = set((-1.0, "incorrect", "missed"))):
         '''
@@ -131,8 +140,6 @@ class ABCAdaptation(ABC):
 
     @staticmethod
     def validate_input(required, inputs, verbose=False):
-        import code
-#        code.interact(local=locals())
         for key, value in inputs.items():
             if key in required.keys():
                 valid = required[key]
@@ -144,10 +151,24 @@ class ABCAdaptation(ABC):
                     ABCAdaptation.validate_input(valid, value, verbose)
                 else:
                     raise ValueError(str(key) + " is not " + str(valid))
-                if verbose: print("{} have valid value {}".format(key, value))
+                if verbose: print("{} have valid value of type {}".format(key, value))
             else:
                 raise ValueError("Unknown input: " + str(key))
             
+    def save_as_pickle(self, file_path):
+        pickle.dump(self, open(file_path, 'wb'))
+
+    def __repr__(self):
+        represent = str(self.__class__.__name__) + '('
+        for key in self.__class__.required_parameters.keys():
+            value = getattr(self, key)
+            if type(value) is str:
+                represent += '\n\t' + key + '=' + '"' + value + '"' + ','
+            else:
+                represent += '\n\t' + key + '=' +str(value) + ','
+        represent = represent[:-1] + ')'
+        return represent
+    
 class InheritableDocstrings(ABC):
     def __prepare__(name, bases):
         classdict = dict()

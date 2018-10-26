@@ -22,12 +22,11 @@ class _Staircase(ABCAdaptation, ABC):
     reset_after_change: bool -- decides if reset n to 0 after every 
     stimulus change
     '''
-    default=""
-    required_parameters = ABCAdaptation.required_parameters.copy()
-    required_parameters.update({'ndown': int,
-                                'nup': int,
-                                'n': int,
-                                'reset_after_change': bool})
+    
+    required_parameters = {'ndown': int,
+                           'nup': int,
+                           'n': int,
+                           'reset_after_change': bool}
 
     def __init__(self, **kwargs):
         super(_Staircase, self).__init__(**kwargs)
@@ -64,7 +63,6 @@ class LinearStaircase(_Staircase):
     responses.
 
     Args:
-    safemode: bool -- currently unused, set False
     ndown: int -- number of consecutive correct responses
     required to change stimuli down
     nup: int -- number of consecutive incorrect resposes
@@ -82,12 +80,11 @@ class LinearStaircase(_Staircase):
     stimulus change
     '''
 
-    required_parameters = _Staircase.required_parameters.copy()
-    required_parameters.update({"diff_up": float,
-                                "diff_down": float,
-                                "value": float,
-                                "max_value": float,
-                                "min_value": float})
+    required_parameters = {"diff_up": float,
+                           "diff_down": float,
+                           "value": float,
+                           "max_value": float,
+                           "min_value": float}
 
     def __init__(self, **kwargs):
         super(LinearStaircase, self).__init__(**kwargs)
@@ -109,7 +106,6 @@ class ListStaircase(_Staircase):
     correct responses move iterator up and incorrent move it down.
 
     Args:
-    safemode: bool -- currently unused, set False
     ndown: int -- number of consecutive correct responses
     required to change stimuli down
     nup: int -- number of consecutive incorrect resposes
@@ -122,9 +118,8 @@ class ListStaircase(_Staircase):
     stimulus change
     '''
 
-    required_parameters = _Staircase.required_parameters.copy()
-    required_parameters.update({"stimuli_tuple": tuple,
-                                "initial_position": int})
+    required_parameters = {"stimuli_tuple": tuple,
+                           "initial_position": int}
 
     def __init__(self, **kwargs):
         super(ListStaircase, self).__init__(**kwargs)

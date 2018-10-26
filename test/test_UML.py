@@ -48,13 +48,35 @@ class UMLParameterTest(unittest.TestCase):
        tested.setParSpace()
        assert_allclose(tested.space, target, rtol=0, atol=1e-10)
 
-    def test_setPrior_flat(self):
+    def test_setPrior_flat(self): # TODO: create tests
         pass
 
     def test_setPrior_norm(self):
         pass
-        
 
+    def test_repr_long(self):
+         tested = UMLParameter(scale="log",
+                             dist="flat",
+                             min_value=1,
+                             max_value=30,
+                             mu=0,
+                             std=20,
+                             n=30)
+         from_repr = eval(tested.__repr__())
+
+         self.assertEquals(tested.scale, from_repr.scale) 
+         self.assertEquals(tested.dist, from_repr.dist)
+         self.assertEquals(tested.min_value, from_repr.min_value)
+         self.assertEquals(tested.max_value, from_repr.max_value)
+         self.assertEquals(tested.n, from_repr.n)
+         self.assertEquals(tested.mu, from_repr.mu)
+         self.assertEquals(tested.std, from_repr.std)
+
+    def test_repr_short(self):
+        tested = UMLParameter(value=10)
+        from_repr = eval(repr(tested))
+        self.assertEquals(tested.value, from_repr.value)
+        
 class UMLTestCase(unittest.TestCase):
     class GenericUML(_UML):
         def _calc_sweetpoints(self, phi):
@@ -126,6 +148,36 @@ class UMLTestCase(unittest.TestCase):
         assert_allclose(self.tested._prepare_prob(A * B * L), ABLprob, rtol=0, atol=1e-7)
         p = self.uml_source_data['p']
         assert_allclose(self.tested.p, p, rtol=0, atol=1e-7)
+
+    def test_dict_constructor(self):
+        dictonary = {'max_stimuli' : 30.0,
+                     'min_stimuli' : -30.0,
+                     'value' : 30.0,
+                     'method' : 'mean',
+                     'alpha' : UMLParameter(scale="lin",
+                                            dist="flat",
+                                            min_value=-10,
+                                            max_value=30,
+                                            mu=0,
+                                            std=20,
+                                            n=61),
+                     'beta': UMLParameter(scale="log",
+                                          dist="norm",
+                                          min_value=0.1,
+                                          max_value=10,
+                                          mu=0,
+                                          std=2,
+                                          n=41),
+                     'gamma' : UMLParameter(value=0.5),
+                     'lamb' : UMLParameter(scale="lin",
+                                           dist="flat",
+                                           min_value=0,
+                                           max_value=0.2,
+                                           mu=0,
+                                           std=0.1,
+                                           n=11)}
+        constructed = UMLTestCase.GenericUML(**dictonary) 
+        self.assertEquals(constructed.max_stimuli, self.tested.max_stimuli) #TODO: add rest cases
         
 class LogitUMLTestCase(unittest.TestCase):
 
@@ -288,7 +340,7 @@ class GaussianUMLTestCase(unittest.TestCase):
                             dist='norm',
                             mu=0.5,
                             std=2)
-        gamma = UMLParameter(value = 0.5)
+        gamma = UMLParameter(value=0.5)
         lamb = UMLParameter(scale="lin",
                             dist="flat",
                             min_value=0,
