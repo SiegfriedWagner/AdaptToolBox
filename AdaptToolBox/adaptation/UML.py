@@ -14,7 +14,6 @@ import AdaptToolBox.curves as curves
 import numpy as np
 import scipy.optimize as sciopt
 import scipy.stats as scistat
-import scipy.special as scispec
 import math
 from abc import ABC, abstractmethod
 

@@ -1,6 +1,5 @@
 '''Module containing all psychometric curves used in this package'''
 import numpy
-import math
 from scipy.special import erf
 
 def logistic(x: float,

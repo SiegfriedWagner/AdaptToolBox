@@ -8,14 +8,15 @@ setuptools.setup(
     version="0.0.3dev",
     author="SiegfriedWagner",
     author_email="zygfrydwagner@gmail.com",
-    description="Containing methods used in cognitive psychology to modulate stimulus",
+    description="Containing methods used in cognitive psychology to modulate experiment stimulus",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/SiegfriedWagner/AdaptToolBox",
-    packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
     ],
+    packages=setuptools.find_packages(),
+    install_requires=['numpy', 'scipy']
 )
