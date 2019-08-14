@@ -178,6 +178,8 @@ class UMLTestCase(unittest.TestCase):
                                            n=11)}
         constructed = UMLTestCase.GenericUML(**dictonary) 
         self.assertEquals(constructed.max_stimuli, self.tested.max_stimuli) #TODO: add rest cases
+
+
         
 class LogitUMLTestCase(unittest.TestCase):
 

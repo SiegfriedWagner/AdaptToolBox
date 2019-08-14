@@ -96,30 +96,19 @@ class UMLParameter(object):
         if hasattr(self, 'value'):
             return representation + 'value=' + str(self.value) + ')'
         else:
-            representation += '\nmin_value=' + str(self.min_value) + ','
-            representation += '\nmax_value=' + str(self.max_value) + ','
-            representation += '\nscale="' + str(self.scale) + '",'
-            representation += '\ndist="' + str(self.dist) + '",'
-            representation += '\nn=' + str(self.n) + ','
-            representation += '\nmu=' + str(self.mu) + ','
-            representation += '\nstd=' + str(self.std) + ')'
+            representation += 'min_value=' + str(self.min_value) + ','
+            representation += 'max_value=' + str(self.max_value) + ','
+            representation += 'scale="' + str(self.scale) + '",'
+            representation += 'dist="' + str(self.dist) + '",'
+            representation += 'n=' + str(self.n) + ','
+            representation += 'mu=' + str(self.mu) + ','
+            representation += 'std=' + str(self.std) + ')'
             return representation
         
 class _UML(ABCAdaptation, ABC):
     '''
     Abstrac Base Class for all UML classes
     '''
-    # required_parameters = ABCAdaptation.required_parameters.copy()
-    # required_parameters.update({
-    #     "max_stimuli": float,
-    #     "min_stimuli": float,
-    #     "value": float,
-    #     "method": ['mean', 'mode'],
-    #     "alpha": UMLParameter,
-    #     "beta": UMLParameter,
-    #     "gamma": UMLParameter,
-    #     "lamb": UMLParameter})
-
     required_parameters = {
         "max_stimuli": float,
         "min_stimuli": float,
@@ -210,6 +199,7 @@ class _UML(ABCAdaptation, ABC):
         Returns:
         float -- new stimulus to procede 
         '''
+
         self.x.append(self.xnext)
         self.responses.append(answer)
         self.p = self.p + \

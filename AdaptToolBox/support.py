@@ -161,9 +161,9 @@ class ABCAdaptation(ABC):
         for key in self.__class__.required_parameters.keys():
             value = getattr(self, key)
             if type(value) is str:
-                represent += '\n\t' + key + '=' + '"' + value + '"' + ','
+                represent += key + '=' + '"' + value + '"' + ','
             else:
-                represent += '\n\t' + key + '=' +str(value) + ','
+                represent += key + '=' +str(value) + ','
         represent = represent[:-1] + ')'
         return represent
     
